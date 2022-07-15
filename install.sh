@@ -59,20 +59,20 @@ oc new-project $NS_TEST
 oc new-project $NS_PROD
 
 info "Deploying and configuring GITEA"
-# oc apply -f workshop-environment/gitea/deploy.yaml -n $NS_CMP
-# GITEA_HOSTNAME=$(oc get route gitea -o template --template='{{.spec.host}}' -n $NS_CMP)
-# sed "s/@HOSTNAME/$GITEA_HOSTNAME/g" workshop-environment/gitea/configuration.yaml | oc create -f - -n $NS_CMP
-# oc rollout status deployment/gitea -n $NS_CMP
-# sed "s/@HOSTNAME/$GITEA_HOSTNAME/g" workshop-environment/gitea/setup_job.yaml | oc apply -f - --wait -n $NS_CMP
-# oc wait --for=condition=complete job/configure-gitea --timeout=60s -n $NS_CMP
+oc apply -f workshop-environment/gitea/gitea_deployment.yaml -n $NS_CMP
+GITEA_HOSTNAME=$(oc get route gitea -o template --template='{{.spec.host}}' -n $NS_CMP)
+sed "s/@HOSTNAME/$GITEA_HOSTNAME/g" workshop-environment/gitea/gitea_configuration.yaml | oc create -f - -n $NS_CMP
+oc rollout status deployment/gitea -n $NS_CMP
+sed "s/@HOSTNAME/$GITEA_HOSTNAME/g" workshop-environment/gitea/setup_job.yaml | oc apply -f - --wait -n $NS_CMP
+oc wait --for=condition=complete job/configure-gitea --timeout=60s -n $NS_CMP
 
-# info "Deploying and configuring OpenShift pipelines"
-# deploy_operator workshop-environment/03-tekton/operator_sub.yaml openshift-pipelines-operator-rh openshift-operators
-# sleep 30
-# oc policy add-role-to-user edit system:serviceaccount:$NS_CMP:pipeline -n $NS_APP_DEV
-# oc policy add-role-to-user edit system:serviceaccount:$NS_CMP:pipeline -n $NS_APP_STAGE
-# oc policy add-role-to-user system:image-puller system:serviceaccount:$NS_APP_STAGE:default -n $NS_CMP
-# oc policy add-role-to-user system:image-puller system:serviceaccount:$NS_APP_STAGE:default -n $NS_APP_DEV
+info "Deploying and configuring OpenShift pipelines"
+deploy_operator workshop-environment/tekton/operator_sub.yaml openshift-pipelines-operator-rh openshift-operators
+sleep 30
+oc policy add-role-to-user edit system:serviceaccount:$NS_CMP:pipeline -n $NS_DEV
+oc policy add-role-to-user edit system:serviceaccount:$NS_CMP:pipeline -n $NS_TEST
+oc policy add-role-to-user edit system:serviceaccount:$NS_CMP:pipeline -n $NS_PROD
+
 
 ##############################################################################
 # -- INSTALATION INFO --

@@ -74,3 +74,6 @@ data:
     FILE_EXTENSIONS = .adoc,.asciidoc
     RENDER_COMMAND = "asciidoc --out-file=- -"
     IS_INPUT_FILE = false
+
+    [webhook]
+    ALLOWED_HOST_LIST = *

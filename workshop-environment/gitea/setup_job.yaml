@@ -2,7 +2,6 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   generateName: gitea-setup-
-  namespace: watches-eshop-cicd
   name: configure-gitea
   labels:
       app.kubernetes.io/part-of: gitea
@@ -27,7 +26,7 @@ spec:
           cd repository
 
           echo "-- Downloading workshop repository"
-          git clone https://github.com/clbartolome/tekton-workshop        
+          git clone https://github.com/clbartolome/tekton-workshop      
 
           
           echo "-- Creating gitea user"
@@ -35,9 +34,6 @@ spec:
             -d '{"username":"gitea","password":"openshift","retype":"openshift","email":"gitea@gitea.com","send_notify":false}' \
             -H "Content-Type: application/json" \
             http://$GITEA_HOSTNAME/user/sign_up
-
-          git config user.email "gitea@gitea.com"
-          git config user.name "gitea"
 
           echo "-- Creating application source repository"
           RESPONSE=$(curl -o /dev/null -s -w "%{http_code}\n" -X POST \
@@ -52,8 +48,10 @@ spec:
           fi
 
           git clone http://gitea:openshift@$GITEA_HOSTNAME/gitea/application-source
+          cp -a tekton-workshop/application-source/. application-source
           cd application-source
-          cp -a tekton-demo/application-source/. application-source
+          git config user.email "gitea@gitea.com"
+          git config user.name "gitea"
           # TODO GREPS + SED
           git add . && git commit -m "Code initialized." && git push
           cd ..
@@ -70,9 +68,11 @@ spec:
               exit 1
           fi
 
-          git clone http://gitea:openshift@$GITEA_HOSTNAME/gitea/application-cicd
-          cd application-cicd
-          cp -a tekton-demo/application-cicd/. application-cicd
+          git clone http://gitea:openshift@$GITEA_HOSTNAME/gitea/application-deploy
+          cp -a tekton-workshop/application-deploy/. application-deploy
+          cd application-deploy
+          git config user.email "gitea@gitea.com"
+          git config user.name "gitea"
           # TODO GREPS + SED
           git add . && git commit -m "Code initialized." && git push
           cd ..
@@ -91,7 +91,9 @@ spec:
 
           git clone http://gitea:openshift@$GITEA_HOSTNAME/gitea/application-cicd
           cd application-cicd
-          cp -a tekton-demo/application-cicd/. application-cicd
+          git config user.email "gitea@gitea.com"
+          git config user.name "gitea"
+          cp -a tekton-workshop/application-cicd/. application-cicd
           # TODO GREPS + SED
           git add . && git commit -m "Code initialized." && git push
           cd ..
