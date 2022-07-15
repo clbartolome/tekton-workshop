@@ -1,0 +1,83 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: ci-pipeline
+  labels:
+    app.kubernetes.io/instance: ci-pipeline
+    pipeline.openshift.io/runtime: quarkus
+spec:
+  params:
+    - name: APP_NAME
+      type: string
+    - name: ENV
+      type: string
+      default: dev
+    - name: APP_REPO_URL
+      type: string
+    - name: APP_REPO_NAME
+      type: string
+    - name: APP_GIT_REVISION
+      type: string
+    - name: DEPLOY_REPO_URL
+      type: string
+    - name: DEPLOY_REPO_OWNER
+      type: string
+    - name: DEPLOY_REPO_NAME
+      type: string
+    - name: REGISTRY
+      type: string
+      default: gcr.io/my-platform
+  workspaces:
+    - name: app-source
+  tasks:
+# ------------ CLONE APP SOURCE ------------ #
+    - name: git-app-clone
+      taskRef:
+        kind: ClusterTask
+        name: git-clone
+      params:
+        - name: url
+          value: $(params.APP_REPO_URL)
+        - name: revision
+          value: $(params.APP_GIT_REVISION)
+        - name: deleteExisting
+          value: 'true'
+        - name: subdirectory
+          value: $(params.APP_REPO_NAME)
+      workspaces:
+        - name: output
+          workspace: app-source
+# ------------ UNIT TEST ------------ #
+    - name: unit-test
+      runAfter:
+        - git-app-clone
+      taskRef:
+        kind: Task
+        name: mock
+# ------------ CREATE PR ------------ #
+    - name: create-pr-to-deploy
+      runAfter:
+        - unit-test
+      taskRef:
+        kind: Task
+        name: create-pr-to-deploy
+      params:
+        - name: DEPLOY_REPO_URL
+          value: $(params.DEPLOY_REPO_URL)
+        - name: DEPLOY_REPO_OWNER
+          value: $(params.DEPLOY_REPO_OWNER)
+        - name: DEPLOY_REPO_NAME
+          value: $(params.DEPLOY_REPO_NAME)
+        - name: BRANCH_NAME
+          value: dev-image-1.0.0-123123122
+        - name: IMAGE_NAME
+          value: $(params.APP_NAME)
+        - name: IMAGE_URL
+          value: $(params.REGISTRY)/$(params.APP_NAME)
+        - name: IMAGE_NEW_VERSION
+          value: 1.0.0-123123122
+        - name: ENV
+          value: $(params.ENV)
+      workspaces:
+        - name: source
+          workspace: app-source
