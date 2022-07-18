@@ -15,7 +15,7 @@ public class AppInfoResourceTest {
           .when().get("/app/info")
           .then()
              .statusCode(200)
-             .body(is("local_test"));
+             .body(is("local_test - quarkus-app:test"));
     }
 
 }

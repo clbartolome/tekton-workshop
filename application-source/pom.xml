@@ -71,6 +71,7 @@
       <url>https://maven.repository.redhat.com/ga</url>
     </pluginRepository>
   </pluginRepositories>
+
   <build>
     <plugins>
       <plugin>
@@ -127,6 +128,12 @@
         </executions>
       </plugin>
     </plugins>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+      </resource>
+  </resources>   
   </build>
   <profiles>
     <profile>

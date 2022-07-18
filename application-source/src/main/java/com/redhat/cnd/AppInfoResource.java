@@ -12,13 +12,18 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 public class AppInfoResource {
 
     @ConfigProperty(name = "application.environment")
-    private String environment;
+    String environment;
+
+    @ConfigProperty(name = "application.name")
+    String name;
+
+    @ConfigProperty(name = "application.version")
+    String version;
 
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     public String appInfo() {
 
-        // TODO: Json with app info (version, environment,...) 
-        return this.environment;
+        return  this.environment + " - " + this.name + ":" + this.version;
     }
 }
