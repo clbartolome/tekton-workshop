@@ -6,8 +6,12 @@ metadata:
     description: |
       Mock tasks for testing porposes.
 spec:
+  params:
+    - name: MOCK_MSG
+      description: Mock message
   steps:
     - name: generate-image-tag
       image: registry.access.redhat.com/ubi8/ubi-minimal:8.3
       script: |
-        echo "Mock task"
+        echo "***** Mock task *****"
+        echo $(params.MOCK_MSG)

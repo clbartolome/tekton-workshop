@@ -73,6 +73,19 @@ oc policy add-role-to-user edit system:serviceaccount:$NS_CMP:pipeline -n $NS_DE
 oc policy add-role-to-user edit system:serviceaccount:$NS_CMP:pipeline -n $NS_TEST
 oc policy add-role-to-user edit system:serviceaccount:$NS_CMP:pipeline -n $NS_PROD
 
+info "Deploying and configuring GitOps"
+deploy_operator workshop-environment/gitops/operator_sub.yaml openshift-gitops-operator openshift-operators
+sleep 15
+oc apply -f workshop-environment/gitops/roles.yaml
+ARGO_URL=$(oc get route openshift-gitops-server -ojsonpath='{.spec.host}' -n openshift-gitops)
+ARGO_PASS=$(oc get secret openshift-gitops-cluster -n openshift-gitops -ojsonpath='{.data.admin\.password}' | base64 -d)
+
+
+
+
+oc new-build  openshift/ubi8-openjdk-11:1.3~http://gitea-workshop-components.apps.cluster-7mjqq.7mjqq.sandbox1856.opentlc.com/gitea/application-source --name=quarkus-app -n app-dev
+oc tag app-dev/quarkus-app:latest quarkus-app:1.0.0-initial -n app-dev
+oc get is -n app-dev
 
 ##############################################################################
 # -- INSTALATION INFO --
@@ -90,6 +103,11 @@ printf "GITEA: \n"
 printf "  - url: http://$GITEA_HOSTNAME\n"
 printf "  - user: gitea\n"
 printf "  - password: openshift\n"
+printf "\n"
+printf "ARGO: \n"
+printf "  - url: $ARGO_URL\n"
+printf "  - user: admin\n"
+printf "  - password: $ARGO_PASS\n"
 printf "\n"
 printf "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n"
 

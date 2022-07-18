@@ -54,6 +54,9 @@ spec:
       taskRef:
         kind: Task
         name: mock
+      params:
+        - name: MOCK_MSG
+          value: unit-test-mock
 # ------------ CREATE PR ------------ #
     - name: create-pr-to-deploy
       runAfter:
@@ -78,6 +81,18 @@ spec:
           value: 1.0.0-123123122
         - name: ENV
           value: $(params.ENV)
+        - name: PR_BODY
+          value: |
+            application: $(params.APP_NAME) \n
+            message: 'New image for $(params.ENV) environment' \n
+            applicationRepo: $(params.APP_REPO_URL) \n
+            applicationRevision: $(params.APP_GIT_REVISION) \n
+            image: $(params.REGISTRY)/$(params.APP_NAME) \n
+            version: 1.0.0-123123122 \n
+            deployRepo: $(params.DEPLOY_REPO_URL) \n
+            deployOwner: $(params.DEPLOY_REPO_OWNER) \n
+            deployName: $(params.DEPLOY_REPO_NAME) \n
+            environment: $(params.ENV) \n
       workspaces:
         - name: source
           workspace: app-source

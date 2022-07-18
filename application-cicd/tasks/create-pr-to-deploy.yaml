@@ -38,6 +38,9 @@ spec:
     - name: ENV
       description: Environment that must be updated
       type: string
+    - name: PR_BODY
+      description: Pull request body
+      type: string
   steps:
     - name: download-deploy
       image: quay.io/calopezb/git-utils:1.0.0
@@ -58,12 +61,15 @@ spec:
       image: k8s.gcr.io/kustomize/kustomize:v3.8.7
       workingDir: $(workspaces.source.path)
       script: |
-        cd $(params.DEPLOY_REPO_NAME)/$(params.ENV)
+        cd $(params.DEPLOY_REPO_NAME)/overlays/$(params.ENV)
         /app/kustomize edit set image $(params.IMAGE_NAME)=$(params.IMAGE_URL):$(params.IMAGE_NEW_VERSION)        
 
     - name: create-pr
       image: quay.io/calopezb/git-utils:1.0.0
       workingDir: $(workspaces.source.path)
+      env:
+        - name: PR_BODY
+          value: $(params.PR_BODY)
       script: |
         cd $(params.DEPLOY_REPO_NAME)
 
@@ -84,13 +90,23 @@ spec:
           exit $EXIT_CODE
         fi
 
+        echo "PR_BODY=${PR_BODY}"
+        PR_BODY_FORMATED=$(echo ${PR_BODY} | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/\\n/g')
+
+        # Create pr body
+        cat <<EOF > /tmp/pr.json
+        {
+          "base": "master",
+          "head": "$(params.BRANCH_NAME)",
+          "title": "$(params.ENV) update: $(params.IMAGE_NEW_VERSION)",
+          "body": "${PR_BODY_FORMATED}"
+        }
+        EOF
+        cat /tmp/pr.json
+
         RESPONSE=$(curl -o /dev/null -s -w "%{http_code}\n" -X POST \
           -u gitea:openshift \
-          -d '{
-            "base":"master",
-            "head":"$(params.BRANCH_NAME)",
-            "title":"$(params.ENV) update: $(params.IMAGE_NEW_VERSION)",
-            "body": "Updated $(params.ENV) image to: $(params.IMAGE_URL):$(params.IMAGE_NEW_VERSION)."}' \
+          -d @/tmp/pr.json \
           -H "Content-Type: application/json" \
           $(params.DEPLOY_REPO_URL)/api/v1/repos/$(params.DEPLOY_REPO_OWNER)/$(params.DEPLOY_REPO_NAME)/pulls)
 
