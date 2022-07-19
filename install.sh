@@ -84,10 +84,17 @@ ARGO_URL=$(oc get route openshift-gitops-server -ojsonpath='{.spec.host}' -n ope
 ARGO_PASS=$(oc get secret openshift-gitops-cluster -n openshift-gitops -ojsonpath='{.data.admin\.password}' | base64 -d)
 oc policy add-role-to-user edit system:serviceaccount:$NS_CMP:pipeline -n openshift-gitops
 
+info "Creating application initial version"
 oc new-build  openshift/ubi8-openjdk-11:1.3~http://$GITEA_HOSTNAME/gitea/application-source --name=quarkus-app -n app-dev
 oc wait --for=condition=complete build/quarkus-app-1 -n app-dev
 oc tag app-dev/quarkus-app:latest quarkus-app:1.0.0-initial -n app-dev
 oc get is -n app-dev
+
+info "Creating argocd application environments"
+oc apply -f application-deploy/argo/quarkus-app.yaml -n openshift-gitops
+
+info "Creating argocd cicd resources"
+oc apply -f application-cicd/application.yaml -n openshift-gitops
 
 ##############################################################################
 # -- INSTALATION INFO --
