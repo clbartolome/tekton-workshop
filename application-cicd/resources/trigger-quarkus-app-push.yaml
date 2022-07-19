@@ -14,7 +14,7 @@ spec:
           params:
             - name: eventTypes
               value:
-                - pull_request
+                - push
       bindings:
         - kind: TriggerBinding
           ref: "ci-trigger-binding"

@@ -77,7 +77,7 @@ spec:
         git config user.name "tekton"
 
         git status
-        git add $(params.ENV)/kustomization.yaml
+        git add overlays/$(params.ENV)/kustomization.yaml
         git commit -m "Updated $(params.ENV) image to: $(params.IMAGE_URL):$(params.IMAGE_NEW_VERSION)."
 
         git remote add auth-origin $(echo $(params.DEPLOY_REPO_URL)/$(params.DEPLOY_REPO_OWNER)/$(params.DEPLOY_REPO_NAME) | sed -E "s#http://(.*)#http://gitea:openshift@\1#g")
@@ -90,16 +90,13 @@ spec:
           exit $EXIT_CODE
         fi
 
-        echo "PR_BODY=${PR_BODY}"
-        PR_BODY_FORMATED=$(echo ${PR_BODY} | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/\\n/g')
-
         # Create pr body
         cat <<EOF > /tmp/pr.json
         {
           "base": "master",
           "head": "$(params.BRANCH_NAME)",
           "title": "$(params.ENV) update: $(params.IMAGE_NEW_VERSION)",
-          "body": "${PR_BODY_FORMATED}"
+          "body": "${PR_BODY}"
         }
         EOF
         cat /tmp/pr.json

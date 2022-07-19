@@ -57,6 +57,9 @@ oc new-project $NS_CMP
 oc new-project $NS_DEV
 oc new-project $NS_TEST
 oc new-project $NS_PROD
+oc policy add-role-to-user system:image-puller system:serviceaccount:$NS_TEST:default -n $NS_DEV
+oc policy add-role-to-user system:image-puller system:serviceaccount:$NS_PROD:default -n $NS_DEV
+
 
 info "Deploying and configuring GITEA"
 oc apply -f workshop-environment/gitea/gitea_deployment.yaml -n $NS_CMP
@@ -79,11 +82,10 @@ sleep 15
 oc apply -f workshop-environment/gitops/roles.yaml
 ARGO_URL=$(oc get route openshift-gitops-server -ojsonpath='{.spec.host}' -n openshift-gitops)
 ARGO_PASS=$(oc get secret openshift-gitops-cluster -n openshift-gitops -ojsonpath='{.data.admin\.password}' | base64 -d)
+oc policy add-role-to-user edit system:serviceaccount:$NS_CMP:pipeline -n openshift-gitops
 
-
-
-
-oc new-build  openshift/ubi8-openjdk-11:1.3~http://gitea-workshop-components.apps.cluster-7mjqq.7mjqq.sandbox1856.opentlc.com/gitea/application-source --name=quarkus-app -n app-dev
+oc new-build  openshift/ubi8-openjdk-11:1.3~http://$GITEA_HOSTNAME/gitea/application-source --name=quarkus-app -n app-dev
+oc wait --for=condition=complete build/quarkus-app-1 -n app-dev
 oc tag app-dev/quarkus-app:latest quarkus-app:1.0.0-initial -n app-dev
 oc get is -n app-dev
 
@@ -94,7 +96,7 @@ printf "\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n"
 printf "\nINSTALATIO COMPLETED!!\n"
 printf "\n"
 printf "OPENSHIFT NAMESPACES: \n"
-printf "  - workshop components: $NS_CMP\n"
+printf "  - components: $NS_CMP\n"
 printf "  - dev: $NS_DEV\n"
 printf "  - test: $NS_TEST\n"
 printf "  - production: $NS_PROD\n"
@@ -105,7 +107,7 @@ printf "  - user: gitea\n"
 printf "  - password: openshift\n"
 printf "\n"
 printf "ARGO: \n"
-printf "  - url: $ARGO_URL\n"
+printf "  - url: https://$ARGO_URL\n"
 printf "  - user: admin\n"
 printf "  - password: $ARGO_PASS\n"
 printf "\n"

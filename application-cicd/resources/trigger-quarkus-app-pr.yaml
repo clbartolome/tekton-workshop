@@ -132,4 +132,7 @@ spec:
         name: cd-pipeline
       serviceAccountName: pipeline
       timeout: 1h0m0s
-      # workspaces: {}
+      workspaces:
+        - name: deploy-source
+          persistentVolumeClaim:
+            claimName: "deploy-pvc"

@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: quarkus-app
+  name: quarkus-app-environments
 spec:
   generators:
     - git:
@@ -23,5 +23,5 @@ spec:
         namespace: '{{ k8s_cluster.namespace }}'
       syncPolicy:
         automated:
-          prune: {{ prune }}
-          selfHeal: {{ selfHeal }}
+          prune: true
+          selfHeal: true
