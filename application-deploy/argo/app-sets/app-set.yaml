@@ -9,7 +9,7 @@ spec:
         revision: master
         files:
           - path: "argo/configuration/dev.json"
-          - path: "argo/configuration/stage.json"
+          - path: "argo/configuration/test.json"
   template:
     metadata:
       name: 'quarkus-app-{{ environment }}'
