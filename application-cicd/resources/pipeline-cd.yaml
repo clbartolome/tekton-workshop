@@ -79,16 +79,20 @@ spec:
       params:
         - name: MOCK_MSG
           value: integration-test-mock
-# ------------ CREATE TAG ------------ #
+# ------------ TAG IMAGE ------------ #
     - name: create-release
       runAfter:
         - performance-test
       taskRef:
         kind: Task
-        name: mock
+        name: tag-image
       params:
-        - name: MOCK_MSG
-          value: tag-image-RELEASE
+        - name: IMAGE
+          value: app-dev/$(params.APP)
+        - name: IMAGE_TAG
+          value: $(params.IMAGE_VERSION)
+        - name: IMAGE_NEW_TAG
+          value: "$(params.IMAGE_VERSION)-RELEASE"
 # ------------ PROMOTE TO TEST ------------ #
     - name: promote-to-test
       runAfter:

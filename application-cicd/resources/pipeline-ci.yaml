@@ -115,13 +115,18 @@ spec:
 # ------------ BUILD IMAGE ------------ #
     - name: build-image
       runAfter:
-        - nexus-upload
+      - nexus-upload
       taskRef:
-        kind: Task
-        name: mock
+        kind: ClusterTask
+        name: s2i-java
       params:
-        - name: MOCK_MSG
-          value: build-image
+        - name: IMAGE
+          value: $(params.REGISTRY)/$(params.APP_NAME)
+        - name: PATH_CONTEXT
+          value: $(params.APP_REPO_NAME)
+      workspaces:
+      - name: source
+        workspace: app-source
 # ------------ IMAGE SCAN ------------ #
     - name: image-scan
       runAfter:
@@ -149,10 +154,14 @@ spec:
         - image-scan
       taskRef:
         kind: Task
-        name: mock
+        name: tag-image
       params:
-        - name: MOCK_MSG
-          value: tag-image
+        - name: IMAGE
+          value: app-dev/$(params.APP_NAME)
+        - name: IMAGE_TAG
+          value: latest
+        - name: IMAGE_NEW_TAG
+          value: "$(tasks.generate-version.results.version)"
 # ------------ CREATE PR ------------ #
     - name: create-pr-to-deploy
       runAfter:

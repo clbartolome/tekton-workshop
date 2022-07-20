@@ -75,6 +75,7 @@ sleep 30
 oc policy add-role-to-user edit system:serviceaccount:$NS_CMP:pipeline -n $NS_DEV
 oc policy add-role-to-user edit system:serviceaccount:$NS_CMP:pipeline -n $NS_TEST
 oc policy add-role-to-user edit system:serviceaccount:$NS_CMP:pipeline -n $NS_PROD
+oc apply -f application-cicd/resources -n $NS_CMP
 
 info "Deploying and configuring GitOps"
 deploy_operator workshop-environment/gitops/operator_sub.yaml openshift-gitops-operator openshift-operators
@@ -93,8 +94,8 @@ oc get is -n app-dev
 info "Creating argocd application environments"
 oc apply -f application-deploy/argo/quarkus-app.yaml -n openshift-gitops
 
-info "Creating argocd cicd resources"
-oc apply -f application-cicd/application.yaml -n openshift-gitops
+PUSH_WH=$(oc get eventlistener quarkus-app-push-listener -o jsonpath='{.status.address.url}' -n $NS_CMP) 
+PR_WH=$(oc get eventlistener quarkus-app-pr-listener -o jsonpath='{.status.address.url}'-n $NS_CMP) 
 
 ##############################################################################
 # -- INSTALATION INFO --
@@ -117,6 +118,10 @@ printf "ARGO: \n"
 printf "  - url: https://$ARGO_URL\n"
 printf "  - user: admin\n"
 printf "  - password: $ARGO_PASS\n"
+printf "\n"
+printf "PIPELINES: \n"
+printf "  - push webhook: $PUSH_WH\n"
+printf "  - pull request webhook: $PR_WH\n"
 printf "\n"
 printf "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n"
 

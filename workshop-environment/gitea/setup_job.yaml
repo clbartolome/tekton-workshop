@@ -76,26 +76,6 @@ spec:
           # TODO GREPS + SED
           git add . && git commit -m "Code initialized." && git push
           cd ..
-
-          echo "-- Creating application cicd repository"
-          RESPONSE=$(curl -o /dev/null -s -w "%{http_code}\n" -X POST \
-            -u gitea:openshift \
-            -d '{"auto_init": true,"default_branch": "master","gitignores": "VisualStudioCode","name": "application-cicd","private": false,"trust_model": "default"}' \
-            -H "Content-Type: application/json" \
-            http://$GITEA_HOSTNAME/api/v1/user/repos)
-
-          if [ "$RESPONSE" != "201" ]; then
-              echo "Error creating application cicd repository, error code: $RESPONSE"
-              exit 1
-          fi
-
-          git clone http://gitea:openshift@$GITEA_HOSTNAME/gitea/application-cicd
-          cp -a tekton-workshop/application-cicd/. application-cicd
-          cd application-cicd
-          git config user.email "gitea@gitea.com"
-          git config user.name "gitea"
-          git add . && git commit -m "Code initialized." && git push
-          cd ..
                     
           echo "------------------------------"
         imagePullPolicy: Always

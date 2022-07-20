@@ -1,9 +1,7 @@
 {
   "environment": "dev",
   "argo_config": {
-    "branch": "master",
-    "prune": true,
-    "selfHeal": true
+    "branch": "master"
   },
   "k8s_cluster": {
     "owner": "admin@redhat.com",

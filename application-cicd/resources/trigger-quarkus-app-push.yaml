@@ -73,7 +73,7 @@ spec:
         - name: DEPLOY_REPO_NAME
           value: application-deploy
         - name: REGISTRY
-          value: gcr.io/my-platform
+          value: image-registry.openshift-image-registry.svc:5000/app-dev
       pipelineRef:
         name: ci-pipeline
       serviceAccountName: pipeline
