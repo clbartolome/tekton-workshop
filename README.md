@@ -12,8 +12,33 @@ Tekton pipelines workshop
 Open a terminal abd login into OpenShift using an user with admin rights.
 
 Execute `install.sh` script. The final output contains the demo installation information. Example:
+
 ```
-TODO
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+INSTALATIO COMPLETED!!
+
+OPENSHIFT NAMESPACES:
+  - components: workshop-components
+  - dev: app-dev
+  - test: app-test
+  - production: app-prod
+
+GITEA:
+  - url: http://gitea-workshop-components.apps.cluster-7mjqq.7mjqq.sandbox1856.opentlc.com
+  - user: gitea
+  - password: openshift
+
+ARGO:
+  - url: https://openshift-gitops-server-openshift-gitops.apps.cluster-7mjqq.7mjqq.sandbox1856.opentlc.com
+  - user: admin
+  - password: iDcS0auoFe5ZE4G3NMpbQvRX7CJgxYPw
+
+PIPELINES:
+  - push webhook: http://el-quarkus-app-push-listener.workshop-components.svc.cluster.local:8080
+  - pull request webhook: http://el-quarkus-app-pr-listener.workshop-components.svc.cluster.local:8080
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ```
 
 Configure gitea webhooks for application push events in master branch (using installation information values):
@@ -38,3 +63,106 @@ Configure gitea webhooks for deploy pull request events (using installation info
 - POST Content Type must be `application/json`
 - Secret can be any value
 - Trigger On `Custon Events` and mark `Pull Request`
+
+Login into ArgoCD and manually sync applications.
+
+## CICD Demo
+
+> NOTE: Some of the following pipeline tasks are a mock and will be completed later on.
+
+Validate applications are working as expected:
+
+```sh
+# dev
+DEV_URL=$(oc get route quarkus-app -n app-dev -o jsonpath='{.status.ingress[0].host}')
+curl http://$DEV_URL/app/info
+
+# test
+TEST_URL=$(oc get route quarkus-app -n app-test -o jsonpath='{.status.ingress[0].host}')
+curl http://$TEST_URL/app/info
+
+# prod
+PROD_URL=$(oc get route quarkus-app -n app-prod -o jsonpath='{.status.ingress[0].host}')
+curl http://$PROD_URL/app/info
+```
+
+Open `application-source` repository and modify the application `pom.xml` version:
+
+```xml
+<version>1.0.1</version>
+```
+
+Commit changes. That push event must trigger tekton `ci-pipeline`:
+
+![image](images/ci.png)
+
+The result of the `ci-pipeline` is a new image tagged with current version and a pull request in `application-deploy` repository to deploy in **dev** environment:
+
+![image](images/dev-pr.png)
+
+Merge pull request. That event must trigger tekton `cd-pipeline`:
+
+![image](images/cd-dev.png)
+
+Validate new version has been deployed:
+```sh
+curl http://$DEV_URL/app/info
+
+"dev" - quarkus-app:1.0.1
+```
+
+The `cd-pipeline` also has created a pull request in `application-deploy` repository to deploy in **test** environment:
+
+![image](images/test-pr.png)
+
+Merge pull request. That event must trigger tekton `cd-pipeline`:
+
+![image](images/cd-test.png)
+
+Validate new version has been deployed:
+```sh
+curl http://$TEST_URL/app/info
+
+"test" - quarkus-app:1.0.1
+```
+
+The `cd-pipeline` also has created a new tag with `-release` appended and a pull request in `application-deploy` repository to deploy in **prod** environment:
+
+![image](images/pr-prod.png)
+
+Merge pull request. That event must trigger tekton `cd-pipeline`:
+
+![image](images/cd-prod.png)
+
+Open ArgoCD and review **prod** application (refresh if needed):
+
+![image](images/sync-1.png)
+
+
+The difference is the new image:
+
+![image](images/sync-2.png)
+
+Sync manually the application and validate:
+
+```sh
+curl http://$PROD_URL/app/info
+
+"prod" - quarkus-app:1.0.1
+```
+
+## Re-Installation
+
+```sh
+# Delete argo applications
+oc delete application.argoproj.io/quarkus-app -n openshift-gitops
+
+# Delete namespaces
+oc delete project workshop-components
+oc delete project app-dev
+oc delete project app-test
+oc delete project app-prod
+```
+
+> NOTE: wait until all namespaces are removed sucessfully an proceed with installation.
+

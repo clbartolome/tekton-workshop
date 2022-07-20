@@ -95,7 +95,7 @@ info "Creating argocd application environments"
 oc apply -f application-deploy/argo/quarkus-app.yaml -n openshift-gitops
 
 PUSH_WH=$(oc get eventlistener quarkus-app-push-listener -o jsonpath='{.status.address.url}' -n $NS_CMP) 
-PR_WH=$(oc get eventlistener quarkus-app-pr-listener -o jsonpath='{.status.address.url}'-n $NS_CMP) 
+PR_WH=$(oc get eventlistener quarkus-app-pr-listener -o jsonpath='{.status.address.url}' -n $NS_CMP) 
 
 ##############################################################################
 # -- INSTALATION INFO --
