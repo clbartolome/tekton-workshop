@@ -12,7 +12,7 @@ spec:
   results:
     - name: NEXT_ENV
   steps:
-    - name: generate-image-tag
+    - name: get-next-environment
       image: registry.access.redhat.com/ubi8/ubi-minimal:8.3
       script: |
 

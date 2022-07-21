@@ -166,3 +166,92 @@ oc delete project app-prod
 
 > NOTE: wait until all namespaces are removed sucessfully an proceed with installation.
 
+## Tekton Overview
+
+> NOTE: tkn client required!
+
+Create a namespace:
+
+```sh
+oc new-project tekton-overview
+```
+
+Create the following task:
+
+```yaml
+cat << EOF | oc apply -f  -
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: demo-task
+spec:
+  params:
+    - name: MESSAGE
+  results:
+    - name: MESSAGE_DATE
+  steps:
+    - name: print-message
+      image: registry.access.redhat.com/ubi8/ubi-minimal:8.3
+      script: |
+        echo $(params.MESSAGE)
+    - name: get-date
+      image: registry.access.redhat.com/ubi8/ubi-minimal:8.3
+      script: |
+        DATE=$(date)
+        echo $DATE > $(results.MESSAGE_DATE.path)
+        echo $DATE
+EOF
+```
+
+Create and test the task:
+
+```sh
+tkn task list
+tkn task start demo-task
+tkn taskrun logs demo-task-run-j662m -f -n tekton-overview
+oc get pods
+oc logs demo-task-run-xxxxx-pod
+oc logs demo-task-run-xxxxx-pod -c step-print-message
+oc logs demo-task-run-xxxxx-pod -c step-maven-version
+```
+
+Create a pipeline:
+
+```yaml
+cat << EOF | oc apply -f  -
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: demo-pipeline
+spec:
+  params:
+    - name: MESSAGE
+  tasks:
+    - name: task-1
+      taskRef:
+        kind: Task
+        name: demo-task
+      params:
+        - name: MESSAGE
+          value: $(params.MESSAGE)
+    - name: task-2
+      runAfter:
+        - task-1
+      taskRef:
+        kind: Task
+        name: demo-task
+      params:
+        - name: MESSAGE
+          value: "$(tasks.task-1.results.MESSAGE_DATE)"
+EOF
+```
+
+Create and test the pipeline:
+
+```sh
+tkn pipeline list
+tkn pipeline start demo-pipeline
+tkn pipelinerun logs demo-pipeline-run-xxxxx -f -n tekton-overview
+tkn pipeline list
+oc get pods
+```

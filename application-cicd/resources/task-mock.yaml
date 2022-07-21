@@ -10,7 +10,7 @@ spec:
     - name: MOCK_MSG
       description: Mock message
   steps:
-    - name: generate-image-tag
+    - name: mock-step
       image: registry.access.redhat.com/ubi8/ubi-minimal:8.3
       script: |
         echo "***** Mock task *****"
