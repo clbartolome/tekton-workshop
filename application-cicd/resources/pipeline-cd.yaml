@@ -81,6 +81,10 @@ spec:
           value: integration-test-mock
 # ------------ TAG IMAGE ------------ #
     - name: create-release
+      when:
+        - input: "$(params.ENV)"
+          operator: in
+          values: ["test"]
       runAfter:
         - performance-test
       taskRef:
@@ -95,6 +99,10 @@ spec:
           value: "$(params.IMAGE_VERSION)-RELEASE"
 # ------------ PROMOTE TO TEST ------------ #
     - name: promote-to-test
+      when:
+        - input: "$(params.ENV)"
+          operator: in
+          values: ["dev"]
       runAfter:
         - integration-test
       taskRef:
@@ -125,6 +133,10 @@ spec:
           workspace: deploy-source
 # ------------ PROMOTE TO PROD ------------ #
     - name: promote-to-prod
+      when:
+        - input: "$(params.ENV)"
+          operator: in
+          values: ["test"]
       runAfter:
         - create-release
       taskRef:
