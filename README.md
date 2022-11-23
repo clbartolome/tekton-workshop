@@ -2,6 +2,8 @@
 
 Tekton pipelines workshop
 
+> Note: working on OCP 4.11
+
 ## Prerequisites
 
 - oc client.
