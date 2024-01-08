@@ -7,7 +7,7 @@ bases:
 commonLabels:
   app: quarkus-app-prod
 
-patches:
+patchesStrategicMerge:
 - ./deploy-replicas-patch.yaml
 
 configMapGenerator:
